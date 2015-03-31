@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <title>Sitemap generator</title>
+
+    <script type="text/javascript">
+      function generateXML()
+      {
+          $('#result').html("Please wait. Sitemap generation in progress...");
+
+          $.ajax({
+              url: '/generate/',
+              method: 'GET',
+              data: $('#gen-form').serialize()
+          }).done(function (response) {
+              switch (response.status) {
+                  case "ok":
+                      $('#result').html('<a href="' + response.url + '">Download sitemap file</a>' +
+                                        '<strong>!!!Pay attention!!!</strong> Link will be unavailable after ' +
+                                        response.to + ' seconds');
+                      break;
+
+                  case "error":
+                      $('#result').html(response.msg);
+                      break;
+
+                  default:
+                      $('#result').html("");
+              }
+          }).fail(function () {
+              $('#result').html("Error occurred during generation");
+          });
+      }
+    </script>
+  </head>
+  <body>
+    <form method="get" action="" id="gen-form">
+      URL:<br>
+      <input type="text" name="url">
+      <br>
+      <input type="button" value="Generate" onClick="generateXML()"/>
+    </form>
+
+    <div id="result">
+    </div>
+  </body>
+</html>
