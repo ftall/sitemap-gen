@@ -5,6 +5,9 @@ import asyncio
 import aiohttp
 import zipfile
 
+from operator import is_not
+from functools import partial
+
 from datetime import datetime
 from time import strftime
 
@@ -216,11 +219,11 @@ class SitemapWalker(object):
       4. Collect unique and valid SitemapObj entities obtained on the
          previous step.
       5. Stop walking if target depth level reached.
-      5. Do asynchronous GET requests for the objects obtained on the
+      6. Do asynchronous GET requests for the objects obtained on the
          step 4 and fill the `nextlvl` list during the HTML content
          analysis.
-      6. Assign `nextlvl` to `thislvl` and increase depth index.
-      7. Go to step 3.
+      7. Assign `nextlvl` to `thislvl` and increase depth index.
+      8. Go to step 3.
 
     Note: index of domain URL is 0.
     """
@@ -295,10 +298,8 @@ class SitemapWalker(object):
             asyncio.set_event_loop(loop)
 
             del aiotasks[:]
-            for v in s:
-                if not v:
-                    break
-                aiotasks.append(asyncio.async(handler(v, *args)))
+            s_filt = filter(partial(is_not, None), s)
+            aiotasks = map(lambda v: asyncio.async(handler(v, *args)), s_filt)
 
             loop.run_until_complete(asyncio.wait(aiotasks))
             loop.close()
@@ -355,9 +356,8 @@ class SitemapWalker(object):
         root = et.Element('urlset')
         root.attrib["xmlns"] = "http://www.sitemaps.org/schemas/sitemap/0.9"
 
-        for l in objlist:
-            if not l:
-                break
+        it = filter(partial(is_not, None), objlist)
+        for l in it:
             root.append(l.xml_node())
 
         self.__indent(root)
